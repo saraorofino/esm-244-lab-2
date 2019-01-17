@@ -1,0 +1,11 @@
+---
+title: "ESM 244 Lab 2"
+author: "Sara Orofino"
+date: "1/17/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
