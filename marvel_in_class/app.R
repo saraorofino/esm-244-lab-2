@@ -30,7 +30,7 @@ ui <- fluidPage(
 )
 
 
-server <- function(input, outputs) {
+server <- function(input, output) {
   
   output$marvelplot <- renderPlot({
     ggplot(filter(marvel, ALIGN == input$side), aes(x = Year)) +
