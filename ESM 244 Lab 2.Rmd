@@ -115,6 +115,51 @@ predictions <- predict(pol_model, type = "probs")
 df <- data.frame(pol_df, predictions) #To combine dataframe predictions with original data used to create the model 
 ```
 
+###2. World Bank Environment PCA - using WorldBank environment indicators 
+
+(Check the key to see the wrangling process for the data)
+
+```{r}
+
+wb_10 <- read_csv("wb_10.csv") %>% 
+  select(-X1) %>% 
+  column_to_rownames('code') # takes column with country code and put it into the row name 
+
+#PCA is specifically for continuous variables - in our dataframe these variables are in columns 3-8
+
+wb_pca <- prcomp(wb_10[3:8], scale = TRUE)
+
+summary(wb_pca)
+
+#PC1 describes ~50% of the data and with PC2 about 75%
+
+# Example biplot - variables are shown as red arrows and countries are shown as points 
+
+ggbiplot(wb_pca, groups = wb_10$region) + #Groups will be shown based on region column in wb_10 df
+  geom_text_repel(label=rownames(wb_10), size = 2, segment.size = 0.2) + # used to move the text labels for points
+  theme_bw()
+
+# Some example interpretations:
+## Clusters are things that are really similar in multivariate space, USA is way to the left on its own 
+
+# factoextra package (built to help visualize outcomes of ordination methods)
+
+#scree plot:
+
+fviz_screeplot(wb_pca)
+
+# See contributions of variables to different components:
+
+fviz_contrib(wb_pca, choice = "var", axes = 2, top =6) # change axes to 1 and 2 to show for both PCs
+
+# Biplot showing points and vectors 
+fviz_pca_biplot(wb_pca, 
+                col.var = "cos2",
+                label = "var", 
+                repel = TRUE)
+
+# slightly nicer biplot - col.var = cos2 will show how well represented variables are on the principal component (higher cos2 aka lighter ones are better represented), label = var lables variables (vectors), repel moves the labels 
+```
 
 
 
