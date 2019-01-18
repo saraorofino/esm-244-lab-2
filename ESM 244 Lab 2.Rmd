@@ -162,5 +162,11 @@ fviz_pca_biplot(wb_pca,
 ```
 
 
+###3. Shiny Apps 
 
+Note: Shiny apps are about precision of brackets and parenthesis...
+
+To make a new Shiny App - go to add button and click Shiny Web App - title it and keep as a single file. 
+
+Remember you can move data by selecting the dataset in your working directory and click "Copy to" then the folder that was created for the app
 
