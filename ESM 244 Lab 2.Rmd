@@ -9,3 +9,113 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+a. Attach packages
+```{r}
+library(tidyverse)
+library(janitor)
+library(MASS)
+library(ggrepel)
+library(RColorBrewer)
+library(factoextra)
+library(ggbiplot)
+library(shinythemes)
+```
+
+If you want to override (set) a function manually throughout an entire workspace, you can assign the function explicitly:
+```{r}
+select <- dplyr::select
+```
+
+###1. Ordinal logistic regrression for political party affiliation by ethnicity, age, and sex.
+
+```{r}
+
+pol_party <- read_csv("pol_party.csv") %>% 
+  clean_names() %>% #uses janitor package to convert all the column names to snakecase 
+  select(participant_id:read_carefully)
+
+# A little more wrangling
+
+pol_df <- pol_party %>% 
+  select(birth_year, gender, ethnicity, political_party) %>% 
+  filter(birth_year > 1900, political_party != "NA", political_party <= 7) %>% 
+  mutate(age = 2016 - birth_year)
+
+# Political party: 1 =  very liberal, 7 = very conservative 
+
+# When doing OLR we want our dependent variable to be of class "ORDERED FACTOR"
+
+# To change the class to an ordered factor:
+
+pol_df$political_party <- factor(pol_df$political_party, ordered = TRUE, levels = c("1", "2", "3", "4", "5", "6", "7"))
+
+# Update our categorical predictor variables to factors too:
+
+pol_df$ethnicity <- factor(pol_df$ethnicity)
+pol_df$gender <- factor(pol_df$gender)
+```
+
+
+Basic data exploration and visualization:
+
+```{r}
+# For easy data counts use tally; can group by as many variables as you want to get the counts for those groups 
+
+count_eth <- pol_df %>% 
+  group_by(ethnicity, political_party) %>% 
+  tally()
+
+# Note that the outcomes are so biased to white respondents (can tell in the count_eth scale, only groups of white respondents have at least 15 respondents in each category, the recommended for OLR)
+
+counts_g <- pol_df %>% 
+  group_by(gender, political_party) %>% 
+  tally()
+
+# Exploratory histogram - "stat = count" can help with factors in your histograms 
+
+ggplot(pol_df, aes(x=political_party)) +
+  geom_histogram(aes(fill = ethnicity), stat = "count") +
+  scale_fill_brewer(palette = "YlGnBu") +
+  facet_wrap(~ethnicity, scales = "free")
+
+ggplot(pol_df, aes(x=political_party)) +
+  geom_histogram(aes(fill = ethnicity), stat = "count") +
+  scale_fill_brewer(palette = "YlGnBu") +
+  facet_wrap(~gender, scales = "free")
+```
+
+# THESE DATA ARE PRECARIOUS AND N IS TOO SMALL FOR GROUPS!!!!!!!
+
+```{r}
+### THIS IS NOT PUBLISHABLE DATA - very biased and sample sizes are too small 
+
+pol_model <- polr(political_party ~ age + gender + ethnicity, data = pol_df)
+
+summary(pol_model)
+
+# Notes about interpretation - coefficients given are log odds with respect to a reference level 
+## Age value is 0.0013 is so tiny that there is almost no influence of age on outcome response 
+## Increase in log odds for males relative to the reference level (female)
+## Ethnicity response reference level is Asian 
+
+# To look at just the odds instead of log odds:
+
+exp(coef(pol_model))
+
+# If the odds are 1 they have not changed. If they are greater than one, odds have increased, less than 1 odds have decreased 
+
+## Increase in odds of males selecting higher ranks (more conservative) than females of the same age and ethnicity 
+
+#############################################
+
+# Once we've decided on a model, we can always make predicitons using it:
+
+predictions <- predict(pol_model, type = "probs")
+
+df <- data.frame(pol_df, predictions) #To combine dataframe predictions with original data used to create the model 
+```
+
+
+
+
+
